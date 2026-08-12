@@ -20,4 +20,13 @@ export const lessons = sqliteTable('lessons', {
   title: text('title').notNull(),
   content: text('content').notNull(),
   order: integer('order').notNull(),
+  
+  // AI Insight Fields (Phase 3)
+  isAnalyzed: integer('is_analyzed', { mode: 'boolean' }).notNull().default(false),
+  keyIdea: text('key_idea'),
+  whyItMatters: text('why_it_matters'),
+  authorMeaning: text('author_meaning'),
+  deepAnalysis: text('deep_analysis'),
+  argumentMap: text('argument_map', { mode: 'json' }), // JSON array of strings
+  assumptions: text('assumptions', { mode: 'json' }), // JSON array of strings
 });

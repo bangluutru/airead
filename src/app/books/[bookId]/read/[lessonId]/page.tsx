@@ -39,21 +39,22 @@ export default async function ReadLessonPage({ params }: { params: Promise<{ boo
     return <div className="p-8">Lesson not found.</div>;
   }
 
-  // Map to the LessonView props format (simulating AI metadata for now)
+  // Map to the LessonView props format
   const mappedLesson = {
     id: activeLesson.id,
     chapter: bookChapters.find(c => c.id === activeLesson?.chapterId)?.title || "Chapter",
     sequence: activeLesson.order,
     title: activeLesson.title,
     estimatedMinutes: Math.ceil(activeLesson.content.split(" ").length / 200),
-    whyItMatters: "This is raw extracted text. AI analysis is pending.",
+    whyItMatters: activeLesson.isAnalyzed ? activeLesson.whyItMatters : "This is raw extracted text. AI analysis is pending.",
     read: activeLesson.content,
-    keyIdea: "AI insights will be generated in Phase 3.",
-    quotes: [],
-    authorMeaning: "",
-    argumentMap: [],
-    deepAnalysis: "",
-    assumptions: []
+    keyIdea: activeLesson.isAnalyzed ? activeLesson.keyIdea : "AI insights will be generated in Phase 3.",
+    quotes: [], // Not implemented yet
+    authorMeaning: activeLesson.isAnalyzed ? activeLesson.authorMeaning : "",
+    argumentMap: activeLesson.isAnalyzed ? (activeLesson.argumentMap as unknown as string[]) : [],
+    deepAnalysis: activeLesson.isAnalyzed ? activeLesson.deepAnalysis : "",
+    assumptions: activeLesson.isAnalyzed ? (activeLesson.assumptions as unknown as string[]) : [],
+    isAnalyzed: activeLesson.isAnalyzed
   };
 
   return (
