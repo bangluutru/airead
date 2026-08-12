@@ -2,11 +2,12 @@ import { LessonView } from "@/components/reader/lesson-view";
 export const runtime = "edge";
 
 // In a real app, this would fetch the lesson data from the database based on params.lessonId
-export default function ReadLessonPage({ params }: { params: { bookId: string; lessonId: string } }) {
+export default async function ReadLessonPage({ params }: { params: Promise<{ bookId: string; lessonId: string }> }) {
+  const { bookId, lessonId } = await params;
   
   // Mock data for Phase 1 UI showcase
   const mockLesson = {
-    id: params.lessonId,
+    id: lessonId,
     chapter: "Chapter 3 — How Habits Shape Identity",
     sequence: 2,
     title: "Identity Before Behavior",
