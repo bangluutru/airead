@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { eq } from "drizzle-orm";
 import { books, chapters, lessons } from "@/db/schema";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 export const runtime = "edge";
 
@@ -20,24 +21,23 @@ export default async function ReadLessonPage({ params }: { params: Promise<{ boo
   const bookChapters = await db.select().from(chapters).where(eq(chapters.bookId, bookId)).all();
 
   // Fetch the current lesson
-  const currentLesson = await db.select().from(lessons).where(eq(lessons.id, lessonId)).get();
+  let activeLesson = await db.select().from(lessons).where(eq(lessons.id, lessonId)).get();
   
-  // Also fetch all lessons to build the navigation (just for the current chapter for simplicity, or all chapters)
-  const allLessons = await db.select().from(lessons).where(eq(lessons.chapterId, currentLesson?.chapterId || "")).all();
-
   // If no lesson matches the ID (or it's a fallback like "lesson-1"), try to find the first lesson
-  let activeLesson = currentLesson;
   if (!activeLesson && lessonId === "lesson-1") {
     // Just grab the very first lesson in the book
     const firstChapter = bookChapters[0];
     if (firstChapter) {
-      activeLesson = await db.select().from(lessons).where(eq(lessons.chapterId, firstChapter.id)).get();
+      activeLesson = await db.select().from(lessons).where(eq(lessons.chapterId, firstChapter.id)).orderBy(lessons.order).get();
     }
   }
 
   if (!activeLesson) {
     return <div className="p-8">Lesson not found.</div>;
   }
+
+  // Fetch all lessons for the active chapter (or all chapters) to build navigation
+  const allLessons = await db.select().from(lessons).where(eq(lessons.chapterId, activeLesson.chapterId)).orderBy(lessons.order).all();
 
   // Map to the LessonView props format
   const mappedLesson = {
@@ -60,25 +60,29 @@ export default async function ReadLessonPage({ params }: { params: Promise<{ boo
   return (
     <div className="flex h-screen bg-background">
       {/* Left Sidebar - Navigation */}
-      <aside className="w-64 border-r bg-muted/10 hidden md:block overflow-y-auto">
-        <div className="p-4 border-b">
-          <h2 className="font-semibold truncate">{bookRecord.title}</h2>
+      <aside className="w-64 border-r border-border/50 bg-background hidden md:block overflow-y-auto">
+        <div className="p-6 border-b border-border/50">
+          <Link href="/library" className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-accent mb-4 block transition-colors">
+            ← Library
+          </Link>
+          <h2 className="font-bold text-foreground text-lg leading-tight mb-1">{bookRecord.title}</h2>
           <p className="text-sm text-muted-foreground">{bookRecord.author}</p>
         </div>
         
-        <div className="p-4 space-y-4 text-sm">
+        <div className="p-4 space-y-6 text-sm">
           {bookChapters.map((ch) => (
-            <div key={ch.id} className="space-y-1">
-              <div className="font-medium">{ch.title}</div>
-              <div className="space-y-1 mt-1">
+            <div key={ch.id} className="space-y-2">
+              <div className="font-bold text-foreground/80 px-2 uppercase tracking-wide text-xs">{ch.title}</div>
+              <div className="space-y-1">
                  {/* Normally we'd nest lessons here. For now just show the active chapter's lessons */}
                  {ch.id === activeLesson?.chapterId && allLessons.map((l) => (
-                    <div 
+                    <Link 
+                      href={`/books/${bookId}/read/${l.id}`}
                       key={l.id} 
-                      className={`pl-4 py-1 cursor-pointer border-l-2 ${l.id === activeLesson?.id ? 'text-primary font-medium border-primary' : 'text-muted-foreground border-transparent hover:border-primary'}`}
+                      className={`block px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 ${l.id === activeLesson?.id ? 'bg-accent/10 text-accent font-bold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                     >
                       {l.order}. {l.title}
-                    </div>
+                    </Link>
                  ))}
               </div>
             </div>
@@ -87,22 +91,29 @@ export default async function ReadLessonPage({ params }: { params: Promise<{ boo
       </aside>
 
       {/* Main Reading Area */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto bg-background">
         <LessonView lesson={mappedLesson} />
       </main>
 
       {/* Right Sidebar - Tools */}
-      <aside className="w-72 border-l bg-muted/10 hidden lg:block overflow-y-auto p-4">
-        <h3 className="font-semibold mb-4">Tools</h3>
-        <div className="space-y-4">
-          <div className="p-3 bg-background border rounded-lg shadow-sm">
-            <h4 className="text-sm font-medium mb-1">AI Socratic Tutor</h4>
-            <p className="text-xs text-muted-foreground mb-3">Discuss this idea deeply with your AI tutor.</p>
-            <button className="w-full text-xs bg-primary text-primary-foreground py-2 rounded-md font-medium">Discuss this idea</button>
+      <aside className="w-80 border-l border-border/50 bg-background hidden xl:block overflow-y-auto p-6">
+        <h3 className="font-bold uppercase tracking-widest text-xs text-muted-foreground mb-6">Tools</h3>
+        <div className="space-y-6">
+          <div className="p-5 bg-accent/5 border border-accent/20 rounded-2xl">
+            <h4 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
+              <span className="text-accent">🧠</span> AI Socratic Tutor
+            </h4>
+            <p className="text-sm text-muted-foreground mb-4 leading-relaxed">Discuss this idea deeply with your AI tutor to solidify understanding.</p>
+            <button className="w-full text-sm bg-accent hover:bg-accent/90 text-white py-3 rounded-xl font-bold transition-all duration-200">
+              Discuss this idea
+            </button>
           </div>
-          <div className="p-3 bg-background border rounded-lg shadow-sm">
-            <h4 className="text-sm font-medium mb-1">Personal Notes</h4>
-            <textarea className="w-full h-24 text-sm p-2 border rounded resize-none" placeholder="Add a thought or connection..."></textarea>
+          <div className="p-5 bg-muted/20 border border-border/50 rounded-2xl">
+            <h4 className="text-sm font-bold text-foreground mb-3">Personal Notes</h4>
+            <textarea 
+              className="w-full h-32 text-sm p-4 bg-background border border-border/50 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all" 
+              placeholder="Add a thought or connection..."
+            ></textarea>
           </div>
         </div>
       </aside>

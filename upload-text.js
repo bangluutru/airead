@@ -22,7 +22,7 @@ async function processText() {
     
     console.log("Uploading to local database via API...");
     try {
-        const response = await fetch("http://localhost:8788/api/upload", {
+        const response = await fetch("https://airead-2yf.pages.dev/api/upload", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
