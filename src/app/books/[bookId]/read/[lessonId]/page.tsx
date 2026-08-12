@@ -1,64 +1,96 @@
 import { LessonView } from "@/components/reader/lesson-view";
+import { getRequestContext } from "@cloudflare/next-on-pages";
+import { drizzle } from "drizzle-orm/d1";
+import { eq } from "drizzle-orm";
+import { books, chapters, lessons } from "@/db/schema";
+import { notFound } from "next/navigation";
+
 export const runtime = "edge";
 
-// In a real app, this would fetch the lesson data from the database based on params.lessonId
 export default async function ReadLessonPage({ params }: { params: Promise<{ bookId: string; lessonId: string }> }) {
   const { bookId, lessonId } = await params;
   
-  // Mock data for Phase 1 UI showcase
-  const mockLesson = {
-    id: lessonId,
-    chapter: "Chapter 3 — How Habits Shape Identity",
-    sequence: 2,
-    title: "Identity Before Behavior",
-    estimatedMinutes: 5,
-    whyItMatters: "Until this point the author has explained how habits form. This lesson introduces a deeper claim: lasting behavioral change depends on identity, not merely goals.",
-    read: "The key to building lasting habits is focusing on creating a new identity first. Your current behaviors are simply a reflection of your current identity. What you do now is a mirror image of the type of person you believe that you are (either consciously or subconsciously). To change your behavior for good, you need to start believing new things about yourself. You need to build identity-based habits. With outcome-based habits, the focus is on what you want to achieve. With identity-based habits, the focus is on who you wish to become.",
-    keyIdea: "Behavioral change is an inside-out process. You must decide the type of person you want to be and prove it to yourself with small wins.",
-    quotes: [
-      {
-        quote: "True behavior change is identity change. You might start a habit because of motivation, but the only reason you'll stick with one is that it becomes part of your identity.",
-        reasonSelected: "Captures the core thesis of the chapter perfectly.",
-        sourceChunkId: "chunk_123"
-      }
-    ],
-    authorMeaning: "The author is arguing against the common cultural narrative of goal-setting. He believes goals (outcomes) are fragile because they don't change the underlying belief system of the person acting.",
-    argumentMap: [
-      "Observation",
-      "Repeated behavior shapes evidence about identity",
-      "Evidence accumulates",
-      "Self-perception changes",
-      "Future behavior becomes more consistent with identity"
-    ],
-    deepAnalysis: "The logical strength here is robust because it aligns with cognitive dissonance theory—humans want their actions to match their self-image. However, a boundary condition exists: if a person has deep psychological trauma related to their identity, simply 'deciding' to be someone else via small habits may not overcome clinical barriers.",
-    assumptions: [
-      "The author assumes individuals have the agency to consciously select their desired identity.",
-      "Assumes that small actions are sufficient to rewrite deeply ingrained self-beliefs."
-    ]
+  const db = drizzle(getRequestContext().env.DB);
+
+  // Fetch the book
+  const bookRecord = await db.select().from(books).where(eq(books.id, bookId)).get();
+  if (!bookRecord) return notFound();
+
+  // Fetch chapters for the sidebar
+  const bookChapters = await db.select().from(chapters).where(eq(chapters.bookId, bookId)).all();
+
+  // Fetch the current lesson
+  const currentLesson = await db.select().from(lessons).where(eq(lessons.id, lessonId)).get();
+  
+  // Also fetch all lessons to build the navigation (just for the current chapter for simplicity, or all chapters)
+  const allLessons = await db.select().from(lessons).where(eq(lessons.chapterId, currentLesson?.chapterId || "")).all();
+
+  // If no lesson matches the ID (or it's a fallback like "lesson-1"), try to find the first lesson
+  let activeLesson = currentLesson;
+  if (!activeLesson && lessonId === "lesson-1") {
+    // Just grab the very first lesson in the book
+    const firstChapter = bookChapters[0];
+    if (firstChapter) {
+      activeLesson = await db.select().from(lessons).where(eq(lessons.chapterId, firstChapter.id)).get();
+    }
+  }
+
+  if (!activeLesson) {
+    return <div className="p-8">Lesson not found.</div>;
+  }
+
+  // Map to the LessonView props format (simulating AI metadata for now)
+  const mappedLesson = {
+    id: activeLesson.id,
+    chapter: bookChapters.find(c => c.id === activeLesson?.chapterId)?.title || "Chapter",
+    sequence: activeLesson.order,
+    title: activeLesson.title,
+    estimatedMinutes: Math.ceil(activeLesson.content.split(" ").length / 200),
+    whyItMatters: "This is raw extracted text. AI analysis is pending.",
+    read: activeLesson.content,
+    keyIdea: "AI insights will be generated in Phase 3.",
+    quotes: [],
+    authorMeaning: "",
+    argumentMap: [],
+    deepAnalysis: "",
+    assumptions: []
   };
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Left Sidebar - Navigation (Mocked) */}
+      {/* Left Sidebar - Navigation */}
       <aside className="w-64 border-r bg-muted/10 hidden md:block overflow-y-auto">
         <div className="p-4 border-b">
-          <h2 className="font-semibold truncate">Atomic Habits</h2>
-          <p className="text-sm text-muted-foreground">James Clear</p>
+          <h2 className="font-semibold truncate">{bookRecord.title}</h2>
+          <p className="text-sm text-muted-foreground">{bookRecord.author}</p>
         </div>
-        <div className="p-4 space-y-2 text-sm">
-          <div className="font-medium">Chapter 3</div>
-          <div className="pl-4 text-muted-foreground border-l-2 border-transparent hover:border-primary cursor-pointer py-1">3.1 The Three Layers of Change</div>
-          <div className="pl-4 text-primary font-medium border-l-2 border-primary py-1">3.2 Identity Before Behavior</div>
-          <div className="pl-4 text-muted-foreground border-l-2 border-transparent hover:border-primary cursor-pointer py-1">3.3 The Two-Step Process</div>
+        
+        <div className="p-4 space-y-4 text-sm">
+          {bookChapters.map((ch) => (
+            <div key={ch.id} className="space-y-1">
+              <div className="font-medium">{ch.title}</div>
+              <div className="space-y-1 mt-1">
+                 {/* Normally we'd nest lessons here. For now just show the active chapter's lessons */}
+                 {ch.id === activeLesson?.chapterId && allLessons.map((l) => (
+                    <div 
+                      key={l.id} 
+                      className={`pl-4 py-1 cursor-pointer border-l-2 ${l.id === activeLesson?.id ? 'text-primary font-medium border-primary' : 'text-muted-foreground border-transparent hover:border-primary'}`}
+                    >
+                      {l.order}. {l.title}
+                    </div>
+                 ))}
+              </div>
+            </div>
+          ))}
         </div>
       </aside>
 
       {/* Main Reading Area */}
       <main className="flex-1 overflow-y-auto">
-        <LessonView lesson={mockLesson} />
+        <LessonView lesson={mappedLesson} />
       </main>
 
-      {/* Right Sidebar - Tools (Mocked) */}
+      {/* Right Sidebar - Tools */}
       <aside className="w-72 border-l bg-muted/10 hidden lg:block overflow-y-auto p-4">
         <h3 className="font-semibold mb-4">Tools</h3>
         <div className="space-y-4">

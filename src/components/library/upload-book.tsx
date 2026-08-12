@@ -33,16 +33,49 @@ export function UploadBook() {
 
     setIsUploading(true);
     setProgress(10);
-    setStatus("Uploading PDF...");
-
-    const formData = new FormData();
-    formData.append("file", file);
+    setStatus("Extracting text from PDF locally...");
 
     try {
-      // Step 1: Upload and Extract Text
+      // 1. Client-side PDF Parsing
+      const pdfjsLib = await import("pdfjs-dist");
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      
+      setProgress(30);
+      setStatus(`Parsing ${pdf.numPages} pages...`);
+
+      const pages = [];
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(" ");
+        pages.push({ pageNumber: i, text: pageText });
+        fullText += pageText + "\n";
+        
+        // Update progress for every 10 pages or last page
+        if (i % 10 === 0 || i === pdf.numPages) {
+          setProgress(30 + Math.floor((i / pdf.numPages) * 30));
+        }
+      }
+
+      const bookData = {
+        title: file.name.replace('.pdf', ''),
+        numPages: pdf.numPages,
+        pages: pages,
+      };
+
+      setProgress(60);
+      setStatus("Saving to library...");
+
+      // 2. Send to backend to save to DB
       const res = await fetch("/api/upload", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookData),
       });
 
       const data = await res.json();
@@ -51,29 +84,17 @@ export function UploadBook() {
         throw new Error(data.error || "Upload failed");
       }
 
-      setProgress(50);
-      setStatus("Extracting text and structure...");
-
-      // Simulate the remaining AI pipeline stages for now
-      // In a real app, this would poll a job queue status
+      setProgress(100);
+      setStatus("Book Ready!");
+      
       setTimeout(() => {
-        setProgress(75);
-        setStatus("Analyzing concepts...");
-        
-        setTimeout(() => {
-          setProgress(100);
-          setStatus("Book Ready!");
-          
-          setTimeout(() => {
-            setIsUploading(false);
-            setOpen(false);
-            setFile(null);
-            setProgress(0);
-            setStatus("");
-            // Refresh library here
-          }, 1000);
-        }, 1500);
-      }, 1500);
+        setIsUploading(false);
+        setOpen(false);
+        setFile(null);
+        setProgress(0);
+        setStatus("");
+        window.location.reload(); // Refresh to see the new book
+      }, 1000);
 
     } catch (error) {
       console.error(error);
