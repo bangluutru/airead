@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+export const runtime = "edge";
 import { extractTextFromPDF } from "@/lib/pdf/extractor";
 
 export async function POST(req: NextRequest) {

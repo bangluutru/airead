@@ -84,6 +84,7 @@ export function UploadBook() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
+      {/* @ts-ignore - Base UI Trigger types don't expose asChild correctly here */}
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Upload className="h-4 w-4" />
@@ -99,12 +100,15 @@ export function UploadBook() {
         </DialogHeader>
         <div className="flex flex-col gap-4 py-4">
           {!isUploading ? (
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="pdf-file">PDF Document</Label>
-              <Input
-                id="pdf-file"
+            <div>
+              <Button onClick={() => document.getElementById('book-upload')?.click()} disabled={isUploading}>
+                {isUploading ? "Processing..." : "Select PDF Book"}
+              </Button>
+              <input
+                id="book-upload"
                 type="file"
                 accept="application/pdf"
+                className="hidden"
                 onChange={handleFileChange}
               />
             </div>

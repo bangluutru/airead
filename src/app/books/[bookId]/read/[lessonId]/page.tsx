@@ -1,4 +1,5 @@
 import { LessonView } from "@/components/reader/lesson-view";
+export const runtime = "edge";
 
 // In a real app, this would fetch the lesson data from the database based on params.lessonId
 export default function ReadLessonPage({ params }: { params: { bookId: string; lessonId: string } }) {

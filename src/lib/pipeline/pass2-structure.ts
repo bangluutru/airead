@@ -2,16 +2,23 @@ import { z } from "zod";
 import { aiProvider } from "@/lib/ai/providers/gemini";
 import { ExtractedPage } from "@/lib/pdf/extractor";
 
-export const StructureNodeSchema = z.object({
+export type StructureNode = {
+  id: string;
+  title: string;
+  type: "FRONT_MATTER" | "PART" | "CHAPTER" | "SECTION" | "SUBSECTION" | "BACK_MATTER";
+  startPage: number;
+  endPage: number | null;
+  children?: StructureNode[];
+};
+
+export const StructureNodeSchema: z.ZodType<StructureNode> = z.lazy(() => z.object({
   id: z.string().describe("A unique identifier for this node, e.g. 'part-1' or 'chapter-1'"),
   title: z.string().describe("The title of this section, e.g. 'Chapter 1: The Beginning'"),
   type: z.enum(["FRONT_MATTER", "PART", "CHAPTER", "SECTION", "SUBSECTION", "BACK_MATTER"]).describe("The structural type of this node."),
   startPage: z.number().describe("The page number where this section begins."),
   endPage: z.number().nullable().describe("The page number where this section ends. Null if unknown."),
-  children: z.lazy(() => z.array(StructureNodeSchema)).optional().describe("Child sections, e.g. sections inside a chapter."),
-});
-
-export type StructureNode = z.infer<typeof StructureNodeSchema>;
+  children: z.array(StructureNodeSchema).optional().describe("Child sections, e.g. sections inside a chapter."),
+}));
 
 export const BookStructureSchema = z.object({
   nodes: z.array(StructureNodeSchema),

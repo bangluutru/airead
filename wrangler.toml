@@ -1,0 +1,14 @@
+name = "airead"
+compatibility_date = "2024-03-20"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "airead-db"
+database_id = "d28b6171-267d-4963-bcc7-b0f71ed43d30"
+migrations_dir = "drizzle"
+
+[[r2_buckets]]
+binding = "PDF_BUCKET"
+bucket_name = "airead-pdf-bucket"
