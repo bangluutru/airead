@@ -6,7 +6,8 @@ import { books, chapters, lessons } from "@/db/schema";
 
 export async function POST(req: NextRequest) {
   try {
-    const data = await req.json();
+    const rawBody = await req.text();
+    const data = JSON.parse(rawBody);
     const { title, numPages, pages } = data;
 
     if (!title || !pages || !Array.isArray(pages)) {
