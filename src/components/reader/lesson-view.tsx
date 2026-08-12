@@ -38,24 +38,24 @@ export function LessonView({ lesson }: { lesson: any }) {
     <div className="max-w-2xl mx-auto py-12 px-6 pb-32">
       {/* Lesson Header */}
       <header className="mb-10">
-        <div className="flex items-center gap-2 text-sm font-medium text-accent mb-4">
+        <div className="flex items-center gap-2 text-sm font-medium text-accent mb-4 font-sans">
           <span className="uppercase tracking-wider">Lesson {lesson.sequence}</span>
           <span>•</span>
           <span>{lesson.estimatedMinutes} min read</span>
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-foreground leading-tight">{lesson.title}</h1>
-        <p className="text-xl text-muted-foreground">{lesson.chapter}</p>
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-foreground leading-tight font-serif">{lesson.title}</h1>
+        <p className="text-xl text-muted-foreground font-sans">{lesson.chapter}</p>
       </header>
 
       {/* Read Section */}
       <section className="mb-16">
-        <div className="prose prose-lg md:prose-xl max-w-none text-foreground/90 leading-relaxed whitespace-pre-wrap">
+        <div className="prose prose-lg md:prose-xl max-w-none text-foreground/90 leading-relaxed whitespace-pre-wrap font-serif">
           {lesson.read}
         </div>
       </section>
 
       {!lesson.isAnalyzed ? (
-        <section className="mb-12 text-center bg-accent/5 p-10 rounded-2xl border border-accent/20">
+        <section className="mb-12 text-center bg-accent/5 p-10 rounded-2xl border border-accent/20 font-sans">
           <Sparkles className="w-10 h-10 text-accent mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-3 text-foreground">Deep Reading AI Analysis</h2>
           <p className="text-muted-foreground mb-8 max-w-md mx-auto text-lg">
@@ -85,21 +85,21 @@ export function LessonView({ lesson }: { lesson: any }) {
         <>
           {/* Why This Matters */}
           {lesson.whyItMatters && (
-            <section className="mb-12 bg-accent/10 p-6 md:p-8 rounded-2xl border-l-4 border-accent">
+            <section className="mb-12 bg-accent/10 p-6 md:p-8 rounded-2xl border-l-4 border-accent font-sans">
               <h3 className="text-sm font-bold uppercase tracking-widest text-accent mb-3">Why This Matters</h3>
-              <p className="text-foreground text-lg md:text-xl font-medium leading-relaxed">{lesson.whyItMatters}</p>
+              <p className="text-foreground text-lg md:text-xl font-medium leading-relaxed font-serif">{lesson.whyItMatters}</p>
             </section>
           )}
 
           {/* Key Idea */}
           {lesson.keyIdea && (
-            <section className="mb-12">
+            <section className="mb-12 font-sans">
               <div className="bg-background border-2 border-border/60 rounded-2xl p-6 md:p-8">
                 <h3 className="font-bold text-foreground mb-4 flex items-center gap-3">
                   <span className="flex items-center justify-center w-8 h-8 rounded-full bg-accent/10 text-accent text-lg">💡</span> 
                   <span className="text-xl">Key Takeaway</span>
                 </h3>
-                <p className="text-lg md:text-xl text-foreground/90 leading-relaxed">{lesson.keyIdea}</p>
+                <p className="text-lg md:text-xl text-foreground/90 leading-relaxed font-serif">{lesson.keyIdea}</p>
               </div>
             </section>
           )}
@@ -113,13 +113,13 @@ export function LessonView({ lesson }: { lesson: any }) {
               <h2 className="text-3xl font-bold text-foreground">Deeper Analysis</h2>
             </div>
             
-            <div className="space-y-12">
+            <div className="space-y-12 font-sans">
               {lesson.authorMeaning && (
                 <div>
                   <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">
                     What the author really means
                   </h3>
-                  <p className="text-foreground/90 text-lg md:text-xl leading-relaxed">{lesson.authorMeaning}</p>
+                  <p className="text-foreground/90 text-lg md:text-xl leading-relaxed font-serif">{lesson.authorMeaning}</p>
                 </div>
               )}
 
@@ -135,7 +135,7 @@ export function LessonView({ lesson }: { lesson: any }) {
                           </div>
                           {i < lesson.argumentMap.length - 1 && <div className="w-0.5 h-full bg-accent/20 mt-2"></div>}
                         </div>
-                        <div className="pb-6 pt-1 text-foreground/90 text-lg leading-relaxed">{step}</div>
+                        <div className="pb-6 pt-1 text-foreground/90 text-lg leading-relaxed font-serif">{step}</div>
                       </div>
                     ))}
                   </div>
@@ -145,7 +145,7 @@ export function LessonView({ lesson }: { lesson: any }) {
               {lesson.assumptions && lesson.assumptions.length > 0 && (
                 <div>
                   <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Hidden Assumptions</h3>
-                  <ul className="list-disc pl-6 space-y-3 text-foreground/90 text-lg md:text-xl leading-relaxed">
+                  <ul className="list-disc pl-6 space-y-3 text-foreground/90 text-lg md:text-xl leading-relaxed font-serif">
                     {lesson.assumptions.map((a: string, i: number) => <li key={i} className="pl-2">{a}</li>)}
                   </ul>
                 </div>
@@ -154,7 +154,7 @@ export function LessonView({ lesson }: { lesson: any }) {
               {lesson.deepAnalysis && (
                 <div>
                   <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Critical Evaluation</h3>
-                  <p className="text-foreground/90 text-lg md:text-xl leading-relaxed">{lesson.deepAnalysis}</p>
+                  <p className="text-foreground/90 text-lg md:text-xl leading-relaxed font-serif">{lesson.deepAnalysis}</p>
                 </div>
               )}
             </div>

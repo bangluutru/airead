@@ -20,6 +20,9 @@ export default async function ReadLessonPage({ params }: { params: Promise<{ boo
   // Fetch chapters for the sidebar
   const bookChapters = await db.select().from(chapters).where(eq(chapters.bookId, bookId)).all();
 
+  // Fetch all books for the quick-switch bookshelf
+  const allBooks = await db.select().from(books).all();
+
   // Fetch the current lesson
   let activeLesson = await db.select().from(lessons).where(eq(lessons.id, lessonId)).get();
   
@@ -33,7 +36,7 @@ export default async function ReadLessonPage({ params }: { params: Promise<{ boo
   }
 
   if (!activeLesson) {
-    return <div className="p-8">Lesson not found.</div>;
+    return <div className="p-8 font-sans">Lesson not found.</div>;
   }
 
   // Fetch all lessons for the active chapter (or all chapters) to build navigation
@@ -59,17 +62,32 @@ export default async function ReadLessonPage({ params }: { params: Promise<{ boo
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Left Sidebar - Navigation */}
+      {/* Leftmost Sidebar - Bookshelf (Pin) */}
+      <aside className="w-16 border-r border-border/50 bg-muted/20 hidden lg:flex flex-col items-center py-4 space-y-4 overflow-y-auto">
+        <Link href="/library" className="p-2 mb-2 hover:bg-muted rounded-xl transition-all" title="Back to Library">
+          <span className="text-xl">📚</span>
+        </Link>
+        <div className="w-8 h-px bg-border/50 mb-2"></div>
+        {allBooks.map(b => (
+          <Link 
+            key={b.id} 
+            href={`/books/${b.id}/read/lesson-1`}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-serif font-bold border transition-all ${b.id === bookId ? 'bg-primary text-primary-foreground border-primary shadow-sm scale-105' : 'bg-background hover:bg-muted border-border/50 text-foreground/70 hover:scale-105'}`}
+            title={b.title}
+          >
+            {b.title.charAt(0).toUpperCase()}
+          </Link>
+        ))}
+      </aside>
+
+      {/* Left Sidebar - Table of Contents */}
       <aside className="w-64 border-r border-border/50 bg-background hidden md:block overflow-y-auto">
         <div className="p-6 border-b border-border/50">
-          <Link href="/library" className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-accent mb-4 block transition-colors">
-            ← Library
-          </Link>
-          <h2 className="font-bold text-foreground text-lg leading-tight mb-1">{bookRecord.title}</h2>
+          <h2 className="font-bold text-foreground text-lg leading-tight mb-1 font-serif">{bookRecord.title}</h2>
           <p className="text-sm text-muted-foreground">{bookRecord.author}</p>
         </div>
         
-        <div className="p-4 space-y-6 text-sm">
+        <div className="p-4 space-y-6 text-sm font-sans">
           {bookChapters.map((ch) => (
             <div key={ch.id} className="space-y-2">
               <div className="font-bold text-foreground/80 px-2 uppercase tracking-wide text-xs">{ch.title}</div>
